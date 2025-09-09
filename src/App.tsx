@@ -1,70 +1,50 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+
+const getAverage = (numbers: number[]) => {
+  console.log("평균값 계산 중...");
+
+  if (numbers.length === 0) return 0;
+
+  const sum = numbers.reduce((acc, cur) => acc + cur);
+
+  return sum / numbers.length;
+};
+
 
 function App() {
-  // useEffect
-  // 리액트 컴포넌트가 렌더링 될 때마다 특정 작업을 수행하도록 설정할 수 있는 Hook.
+  const [list, setList] = useState<number[]>([]);
+  const [number, setNumber] = useState<string>(""); // 실제 input 태그의 입력된 숫자를 list 배열에 주입할 것이기 때문에 상태 값 이름을 number 로 지정. 단, input 태그에 입력된 값이기 때문에 데이터 타입은 string 입니다.
 
-  // 1. 마운트가 될 때만, 최초 1회만 실행하고 싶을 때.
-  // 마운트란, 리액트 DO 에 우리가 return 키워드 하단에 작성한 HTML, CSS 영역
-  // 즉, UI 가 붙었을 때 => 우리가 HTML을 자바스크립트로 통제 가능할 때
-  // useEffect 에서 설정한 함수를 컴포넌트가 화면에 맨 처음 렌더링 될 때만 실행하고, 업데이트 될 때는 실행하지 않으려면, 함수에 두 번째 매개변수로 빈 배열을 넣어주면 된다.
+  const onInsert = () => {
+    // concat: Array 인스턴스의 concat 함수는 두 개 이상의 배열을 병합하는 데 사용.
+    // 이 메서드는 기존 배열을 변경하지 않고, 대신 새로운 배열을 반환.
+    // parseInt: 문자열 인자를 파싱하여 특정 진수(기본값은 10)의 정수를 반환.
+    const newList = list.concat(parseInt(number));
 
-  // 2. 특정 값이 업데이트 될 때만 실행하고 싶을 때
-  // useEffect 를 사용할 때, 특정 값이 변경될 때만 호출하고 싶을 경우도 있다.
-  // useEffect의 두 번째 매개변수로 전달되는 배열 안에 검사하고 싶은 값을 넣어주면 된다.
-
-  const [name, setName] = useState<string>("");
-  const [nickname, setNickname] = useState<string>("");
-
-  // useEffect(() => {
-  //   // 해당 컴포넌트가 최초 렌더링이 될 떄, useEffect 는 실행이 되고,
-  //   // 우리가 선언한 state 즉, 상태 값이 변화하더라도 useEffect 가 실행되는 것으로 보아
-  //   // state 즉, 상태가 값이 변화하면 해당 컴포넌트는 재렌더링이 된다는 것을 알 수 가 있습니다.
-  //   console.log("컴포넌트가 렌더링 될 때마다 특정 작업을 수행합니다.");
-  //   console.log("name: ", name);
-  //   console.log("nickname: ", nickname);
-  // });
-
-  useEffect(() => {
-    console.log("마운트가 될 때만 수행합니다. - 최초 1회 실시");
-    console.log("name: ", name);
-    console.log("nickname: ", nickname);
-  }, []);
-
-  useEffect(() => {
-    console.log("name 이라는 상태 값이 변할 경우에만 수행합니다.");
-    console.log("name: ", name);
-    console.log("nickname: ", nickname);
-  }, [name]);
-
-  useEffect(() => {
-    console.log("뒷 정리하기");
-    console.log("updated name: ", name);
-
-    return () => {
-      // 종료시킬 로직 작성하는 부분
-      // 언마운트 될 때, 혹은 업데이트 되기 직전에 특정 작업을 수행하고 싶을 때
-      console.log("cleanup");
-      console.log(name);
-    };
-  }, [name]);
-
-
-  const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
+    setList(newList);
+    setNumber("");
   };
 
-  const onChangeNickname = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNickname(e.target.value);
-  };
+  // list 가 변할 때마다, getAverage 함수 호출
+  // useMemo: 첫 번째 파라미터로 전달된 함수의 반환 값을 기억했다가, 두 번째 파라미터(의존성 배열)에 명시된 값이 바뀌었을 때에만 함수를 다시 호출.
+  // 따라서, list 가 바뀔 때에만 getAverage 함수가 호출되고, 그렇지 않으면 이전에 계산된 평균값을 재사용.
+  // 이를 통해 불필요한 계산을 피하고 성능을 최적화할 수 있음.
+  const average = useMemo(() => getAverage(list), [list]);
 
   return (
     <div>
-      <input type="text" value={name} onChange={onChangeName} />
-      <input type="text" value={nickname} onChange={onChangeNickname} />
+      <input type="text" value={number} onChange={(e) => setNumber(e.target.value)} />
+      <button onClick={onInsert}>등록</button>
 
-      <div><b>이름: {name}</b></div>
-      <div><b>닉네임: {nickname}</b></div>
+      <ul>
+        {list.map((item: number, index: number) => {
+          return <li key={index}>{item}</li>;
+        })}
+      </ul>
+
+      <div>
+        <b>평균 값: {average}</b>
+      </div>
     </div>
   );
 }
